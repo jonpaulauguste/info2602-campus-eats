@@ -1,6 +1,6 @@
 from sqlmodel import SQLModel, Session, create_engine, select
 
-from app.auth import hash_password
+from app.auth import hash_password, verify_password
 from app.models import MenuItem, Place, Review, User
 
 engine = create_engine("sqlite:///database.db", echo=True)
@@ -31,11 +31,19 @@ def _migrate_user_table_if_needed():
                 "ALTER TABLE \"user\" ADD COLUMN password VARCHAR NOT NULL DEFAULT ''"
             )
 
+        if "role" not in columns:
+            connection.exec_driver_sql(
+                "ALTER TABLE \"user\" ADD COLUMN role VARCHAR NOT NULL DEFAULT 'user'"
+            )
+
         connection.exec_driver_sql(
             'CREATE UNIQUE INDEX IF NOT EXISTS ix_user_username ON "user" (username)'
         )
         connection.exec_driver_sql(
             'CREATE UNIQUE INDEX IF NOT EXISTS ix_user_email ON "user" (email)'
+        )
+        connection.exec_driver_sql(
+            'UPDATE "user" SET role = "user" WHERE role IS NULL OR role = ""'
         )
 
 
@@ -60,7 +68,40 @@ def _migrate_place_table_if_needed():
             )
 
 
-def seed_places(session: Session):
+def _ensure_user(
+    session: Session,
+    username: str,
+    email: str,
+    plain_password: str,
+    role: str,
+) -> User:
+    user = session.exec(select(User).where(User.username == username)).first()
+    if user is None:
+        user = session.exec(select(User).where(User.email == email)).first()
+
+    if user is None:
+        user = User(
+            username=username,
+            email=email,
+            password=hash_password(plain_password),
+            role=role,
+        )
+        session.add(user)
+        session.flush()
+        return user
+
+    user.username = username
+    user.email = email
+    user.role = role
+    if not verify_password(plain_password, user.password):
+        user.password = hash_password(plain_password)
+
+    session.add(user)
+    session.flush()
+    return user
+
+
+def _seed_places_and_menu(session: Session):
     existing_place = session.exec(select(Place)).first()
     if existing_place:
         return
@@ -134,46 +175,33 @@ def seed_places(session: Session):
     ]
     session.add_all(menu_items)
 
-    users = []
-    user_data = [
-        ("bob", "bob@campuseats.com", "bobpass"),
-        ("ava", "ava@campuseats.com", "password123"),
-        ("mia", "mia@campuseats.com", "password123"),
-    ]
-    for username, email, password in user_data:
-        existing_user = session.exec(
-            select(User).where(User.username == username)
-        ).first()
-        if existing_user:
-            users.append(existing_user)
-            continue
 
-        new_user = User(
-            username=username,
-            email=email,
-            password=hash_password(password),
-        )
-        session.add(new_user)
-        session.flush()
-        users.append(new_user)
+def _seed_reviews(session: Session, bob: User, student: User):
+    existing_review = session.exec(select(Review)).first()
+    if existing_review:
+        return
+
+    places = session.exec(select(Place)).all()
+    if len(places) < 3:
+        return
 
     reviews = [
         Review(
             rating=5,
             comment="Fast service and great flavor.",
-            user_id=users[0].id,
+            user_id=bob.id,
             place_id=places[1].id,
         ),
         Review(
             rating=4,
-            comment="Good food, portions were decent.",
-            user_id=users[1].id,
+            comment="Good food and fair prices.",
+            user_id=student.id,
             place_id=places[0].id,
         ),
         Review(
             rating=5,
             comment="Best doubles on campus.",
-            user_id=users[2].id,
+            user_id=bob.id,
             place_id=places[5].id,
         ),
     ]
@@ -186,7 +214,30 @@ def create_db_and_tables():
     _migrate_place_table_if_needed()
 
     with Session(engine) as session:
-        seed_places(session)
+        bob = _ensure_user(
+            session,
+            username="bob",
+            email="bob@campuseats.com",
+            plain_password="bobpass",
+            role="user",
+        )
+        _ensure_user(
+            session,
+            username="manager",
+            email="manager@campuseats.com",
+            plain_password="managerpass",
+            role="management",
+        )
+        student = _ensure_user(
+            session,
+            username="ava",
+            email="ava@campuseats.com",
+            plain_password="password123",
+            role="user",
+        )
+
+        _seed_places_and_menu(session)
+        _seed_reviews(session, bob=bob, student=student)
         session.commit()
 
 

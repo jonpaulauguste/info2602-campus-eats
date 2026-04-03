@@ -46,6 +46,22 @@
     <h2>Reviews</h2>
 </div>
 <div class="restaurant-card" style="padding: 14px;">
+    {% if user %}
+    <form method="post" action="/places/{{ place.id }}/reviews" style="display: grid; gap: 10px; margin-bottom: 16px; border-bottom: 1px solid #eee; padding-bottom: 14px;">
+        <label>
+            Rating (1-5)
+            <input type="number" name="rating" min="1" max="5" required style="width: 100%; padding: 8px; margin-top: 4px;" />
+        </label>
+        <label>
+            Comment
+            <textarea name="comment" rows="3" style="width: 100%; padding: 8px; margin-top: 4px;"></textarea>
+        </label>
+        <button type="submit" class="btn btn-primary" style="width: fit-content;">Add Review</button>
+    </form>
+    {% else %}
+    <p style="margin-bottom: 12px;"><a href="/login">Log in</a> to leave a review.</p>
+    {% endif %}
+
     {% for review in reviews %}
     <div style="margin-bottom: 14px;">
         <div class="card-meta">

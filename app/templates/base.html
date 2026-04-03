@@ -23,6 +23,9 @@
         <div class="navbar-right">
             {% if user %}
                 <span class="user-greeting">Hi, {{ user.username }}</span>
+                {% if user.role in ["management", "admin"] %}
+                <a href="/admin/places" class="btn btn-outline">Manage</a>
+                {% endif %}
                 <a href="/logout" class="btn btn-outline">Log Out</a>
             {% else %}
                 <a href="/login" class="btn btn-outline">Log In</a>

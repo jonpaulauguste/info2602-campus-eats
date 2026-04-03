@@ -8,6 +8,7 @@ class User(SQLModel, table=True):
     username: str = Field(unique=True, index=True)
     email: str = Field(unique=True, index=True)
     password: str
+    role: str = Field(default="user")
 
     reviews: list["Review"] = Relationship(back_populates="user")
 
