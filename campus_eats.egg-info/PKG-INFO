@@ -1,0 +1,14 @@
+Metadata-Version: 2.4
+Name: campus-eats
+Version: 0.1.0
+Summary: Campus Eats project
+Requires-Python: >=3.11
+Requires-Dist: fastapi
+Requires-Dist: uvicorn
+Requires-Dist: sqlmodel
+Requires-Dist: jinja2
+Requires-Dist: python-multipart
+Requires-Dist: pydantic-settings
+Requires-Dist: email-validator
+Requires-Dist: pyjwt
+Requires-Dist: pwdlib[argon2]
