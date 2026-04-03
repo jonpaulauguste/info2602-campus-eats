@@ -257,35 +257,113 @@ def _sync_place_details(session: Session):
 
 
 def _seed_reviews(session: Session, bob: User, student: User):
-    existing_review = session.exec(select(Review)).first()
-    if existing_review:
-        return
-
     places = session.exec(select(Place)).all()
-    if len(places) < 3:
+    if not places:
         return
 
-    reviews = [
-        Review(
-            rating=5,
-            comment="Fast service and great flavor.",
-            user_id=bob.id,
-            place_id=places[1].id,
-        ),
-        Review(
-            rating=4,
-            comment="Good food and fair prices.",
-            user_id=student.id,
-            place_id=places[0].id,
-        ),
-        Review(
-            rating=5,
-            comment="Best doubles on campus.",
-            user_id=bob.id,
-            place_id=places[5].id,
-        ),
-    ]
-    session.add_all(reviews)
+    existing_reviews = session.exec(select(Review)).all()
+    reviewed_place_ids = {review.place_id for review in existing_reviews}
+
+    review_seed_by_place = {
+        "The Campus Grill": {
+            "rating": 4,
+            "comment": "Good food and fair prices.",
+            "user_id": student.id,
+        },
+        "Roti Hut": {
+            "rating": 5,
+            "comment": "Fast service and great flavor.",
+            "user_id": bob.id,
+        },
+        "Cafe Mocha": {
+            "rating": 4,
+            "comment": "Great coffee between classes.",
+            "user_id": student.id,
+        },
+        "Dragon Wok": {
+            "rating": 4,
+            "comment": "Tasty lunch specials and big portions.",
+            "user_id": bob.id,
+        },
+        "Pizza Planet": {
+            "rating": 5,
+            "comment": "Fresh slices and quick service.",
+            "user_id": student.id,
+        },
+        "Doubles Express": {
+            "rating": 5,
+            "comment": "Best doubles on campus.",
+            "user_id": bob.id,
+        },
+    }
+
+    reviews_to_add = []
+    for index, place in enumerate(places):
+        if place.id in reviewed_place_ids:
+            continue
+
+        seed_review = review_seed_by_place.get(
+            place.name,
+            {
+                "rating": 4,
+                "comment": "Tasty food and friendly service.",
+                "user_id": bob.id if index % 2 == 0 else student.id,
+            },
+        )
+
+        reviews_to_add.append(
+            Review(
+                rating=seed_review["rating"],
+                comment=seed_review["comment"],
+                user_id=seed_review["user_id"],
+                place_id=place.id,
+            )
+        )
+
+    if reviews_to_add:
+        session.add_all(reviews_to_add)
+
+
+def _calculate_average_rating_for_place(session: Session, place_id: int) -> float:
+    reviews = session.exec(select(Review).where(Review.place_id == place_id)).all()
+    if not reviews:
+        return 0.0
+
+    total = sum(review.rating for review in reviews)
+    return round(total / len(reviews), 1)
+
+
+def _update_place_ratings_from_reviews(session: Session):
+    places = session.exec(select(Place)).all()
+    for place in places:
+        place.rating = _calculate_average_rating_for_place(session, place.id)
+        session.add(place)
+
+
+def ensure_reviews_for_all_places(session: Session):
+    places = session.exec(select(Place)).all()
+    reviews_to_add = []
+
+    for place in places:
+        existing_review = session.exec(
+            select(Review).where(Review.place_id == place.id)
+        ).first()
+        if existing_review is None:
+            reviews_to_add.append(
+                Review(
+                    rating=4,
+                    comment="Good place overall.",
+                    user_id=1,
+                    place_id=place.id,
+                )
+            )
+
+    if reviews_to_add:
+        session.add_all(reviews_to_add)
+        session.flush()
+
+    _update_place_ratings_from_reviews(session)
+    session.commit()
 
 
 def create_db_and_tables():
@@ -320,7 +398,7 @@ def create_db_and_tables():
         _sync_place_details(session)
         _sync_place_images(session)
         _seed_reviews(session, bob=bob, student=student)
-        session.commit()
+        ensure_reviews_for_all_places(session)
 
 
 def get_session():
