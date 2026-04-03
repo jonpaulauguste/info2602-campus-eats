@@ -18,6 +18,7 @@ class Place(SQLModel, table=True):
     name: str
     cuisine: str
     location: str
+    description: str = ""
     rating: float = 0.0
     image_url: str = "/static/img/placeholder.svg"
 

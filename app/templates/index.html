@@ -27,16 +27,25 @@
         />
         <div class="card-body">
             <h3>{{ place.name }}</h3>
+            {% set avg_rating = average_ratings.get(place.id) %}
             <div class="card-meta">
+                {% if avg_rating is not none %}
                 <div class="rating">
                     <span class="star">★</span>
-                    <span>{{ place.rating }}</span>
+                    <span>{{ avg_rating }}</span>
                 </div>
+                {% else %}
+                <span>No ratings yet</span>
+                {% endif %}
                 <span>•</span>
                 <span>{{ place.cuisine }}</span>
             </div>
             <div class="card-meta">
                 <span>{{ place.location }}</span>
+            </div>
+            <p class="card-description-clamp" style="margin-top: 8px; color: #555;">{{ place.description }}</p>
+            <div class="card-meta" style="margin-top: 8px;">
+                <span style="color: #d32f2f; font-weight: 600;">Get Directions ↗</span>
             </div>
         </div>
     </a>

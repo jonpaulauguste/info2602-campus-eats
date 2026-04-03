@@ -22,7 +22,7 @@
         </div>
         <div class="navbar-right">
             {% if user %}
-                <span class="user-greeting">Hi, {{ user.username }}</span>
+                <span class="user-greeting">Hi, {{ (user.username[:1] | upper) ~ user.username[1:] }}</span>
                 {% if user.role in ["management", "admin"] %}
                 <a href="/admin/places" class="btn btn-outline">Manage</a>
                 {% endif %}

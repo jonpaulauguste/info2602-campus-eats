@@ -12,6 +12,35 @@ PLACE_IMAGE_OVERRIDES = {
     "Pizza Planet": "/static/img/pizza-planet.jpg",
     "Dragon Wok": "/static/img/dragon-wok.jpg",
     "Doubles Express": "/static/img/doubles-express.jpg",
+    "Barry's Gyro": "/static/img/barrys-gyro.jpg",
+    "Island Bites": "/static/img/island-bites.jpg",
+}
+
+PLACE_DETAILS_OVERRIDES = {
+    "The Campus Grill": {
+        "location": "Student Centre",
+        "description": "Burgers, fries, and comfort food near the student center.",
+    },
+    "Roti Hut": {
+        "location": "South Gate",
+        "description": "Fresh roti, curry dishes, and local favorites.",
+    },
+    "Cafe Mocha": {
+        "location": "Library Building",
+        "description": "Coffee, pastries, and quick breakfast options.",
+    },
+    "Dragon Wok": {
+        "location": "Engineering Block",
+        "description": "Wok-fried noodles, rice bowls, and lunch specials.",
+    },
+    "Pizza Planet": {
+        "location": "North Plaza",
+        "description": "Pizza slices, pasta bowls, and garlic bread.",
+    },
+    "Doubles Express": {
+        "location": "Main Entrance",
+        "description": "Street-side doubles, drinks, and quick bites.",
+    },
 }
 
 
@@ -69,11 +98,22 @@ def _migrate_place_table_if_needed():
             connection.exec_driver_sql(
                 'ALTER TABLE "place" ADD COLUMN location VARCHAR NOT NULL DEFAULT ""'
             )
+            columns.append("location")
+
+        if "description" not in columns:
+            connection.exec_driver_sql(
+                'ALTER TABLE "place" ADD COLUMN description VARCHAR NOT NULL DEFAULT ""'
+            )
+            columns.append("description")
 
         if "description" in columns:
             connection.exec_driver_sql(
                 'UPDATE "place" SET location = description '
                 'WHERE location = "" AND description IS NOT NULL'
+            )
+            connection.exec_driver_sql(
+                'UPDATE "place" SET description = location '
+                'WHERE description = "" AND location IS NOT NULL'
             )
 
 
@@ -120,6 +160,7 @@ def _seed_places_and_menu(session: Session):
             name="The Campus Grill",
             cuisine="American",
             location="Student Centre",
+            description="Burgers, fries, and comfort food near the student center.",
             rating=4.5,
             image_url="/static/img/campus-grill.jpg",
         ),
@@ -127,6 +168,7 @@ def _seed_places_and_menu(session: Session):
             name="Roti Hut",
             cuisine="Caribbean",
             location="South Gate",
+            description="Fresh roti, curry dishes, and local favorites.",
             rating=4.7,
             image_url="/static/img/roti-hut.jpg",
         ),
@@ -134,6 +176,7 @@ def _seed_places_and_menu(session: Session):
             name="Cafe Mocha",
             cuisine="Coffee and Pastries",
             location="Library Building",
+            description="Coffee, pastries, and quick breakfast options.",
             rating=4.3,
             image_url="/static/img/cafe-mocha.jpg",
         ),
@@ -141,6 +184,7 @@ def _seed_places_and_menu(session: Session):
             name="Dragon Wok",
             cuisine="Chinese",
             location="Engineering Block",
+            description="Wok-fried noodles, rice bowls, and lunch specials.",
             rating=4.1,
             image_url="/static/img/dragon-wok.jpg",
         ),
@@ -148,6 +192,7 @@ def _seed_places_and_menu(session: Session):
             name="Pizza Planet",
             cuisine="Italian",
             location="North Plaza",
+            description="Pizza slices, pasta bowls, and garlic bread.",
             rating=4.6,
             image_url="/static/img/pizza-planet.jpg",
         ),
@@ -155,6 +200,7 @@ def _seed_places_and_menu(session: Session):
             name="Doubles Express",
             cuisine="Street Food",
             location="Main Entrance",
+            description="Street-side doubles, drinks, and quick bites.",
             rating=4.8,
             image_url="/static/img/doubles-express.jpg",
         ),
@@ -191,6 +237,22 @@ def _sync_place_images(session: Session):
         if place is None:
             continue
         place.image_url = image_url
+        session.add(place)
+
+
+def _sync_place_details(session: Session):
+    for place_name, details in PLACE_DETAILS_OVERRIDES.items():
+        place = session.exec(select(Place).where(Place.name == place_name)).first()
+        if place is None:
+            continue
+
+        # If location was incorrectly copied from description during migration, restore it.
+        if place.location.strip() == place.description.strip():
+            place.location = details["location"]
+
+        if not place.description.strip():
+            place.description = details["description"]
+
         session.add(place)
 
 
@@ -255,6 +317,7 @@ def create_db_and_tables():
         )
 
         _seed_places_and_menu(session)
+        _sync_place_details(session)
         _sync_place_images(session)
         _seed_reviews(session, bob=bob, student=student)
         session.commit()

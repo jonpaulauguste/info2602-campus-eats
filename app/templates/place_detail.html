@@ -17,14 +17,30 @@
     />
     <div class="card-body">
         <div class="card-meta">
+            {% if average_rating is not none %}
             <div class="rating">
                 <span class="star">★</span>
-                <span>{{ place.rating }}</span>
+                <span>{{ average_rating }}</span>
             </div>
+            {% else %}
+            <span>No ratings yet</span>
+            {% endif %}
             <span>•</span>
             <span>{{ place.cuisine }}</span>
         </div>
-        <p>Location: {{ place.location }}</p>
+        <p><strong>Location:</strong> {{ place.location }}</p>
+        <p><strong>Description:</strong> {{ place.description }}</p>
+        <a
+            id="directionsBtn"
+            class="btn btn-outline"
+            href="{{ place_maps_url }}"
+            data-destination="{{ destination_query }}"
+            target="_blank"
+            rel="noopener noreferrer"
+            style="margin-top: 10px; width: fit-content;"
+        >
+            Get Directions
+        </a>
     </div>
 </div>
 
@@ -49,8 +65,16 @@
     {% if user %}
     <form method="post" action="/places/{{ place.id }}/reviews" style="display: grid; gap: 10px; margin-bottom: 16px; border-bottom: 1px solid #eee; padding-bottom: 14px;">
         <label>
-            Rating (1-5)
-            <input type="number" name="rating" min="1" max="5" required style="width: 100%; padding: 8px; margin-top: 4px;" />
+            Rating
+            <div class="rating-input-row" style="margin-top: 6px;">
+                <button type="button" class="rating-star-btn" data-value="1" aria-label="1 star">★</button>
+                <button type="button" class="rating-star-btn" data-value="2" aria-label="2 stars">★</button>
+                <button type="button" class="rating-star-btn" data-value="3" aria-label="3 stars">★</button>
+                <button type="button" class="rating-star-btn" data-value="4" aria-label="4 stars">★</button>
+                <button type="button" class="rating-star-btn" data-value="5" aria-label="5 stars">★</button>
+                <span id="ratingValueLabel" style="margin-left: 6px; color: #666; font-size: 0.9rem;">5/5</span>
+            </div>
+            <input type="hidden" id="ratingInput" name="rating" value="5" />
         </label>
         <label>
             Comment
@@ -65,7 +89,7 @@
     {% for review in reviews %}
     <div style="margin-bottom: 14px;">
         <div class="card-meta">
-            <strong>{{ review.user_name }}</strong>
+            <strong>{{ (review.user_name[:1] | upper) ~ review.user_name[1:] }}</strong>
             <span>•</span>
             <span class="rating"><span class="star">★</span>{{ review.rating }}/5</span>
         </div>
@@ -75,4 +99,70 @@
     <p>No reviews yet.</p>
     {% endfor %}
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    (function () {
+        const ratingInput = document.getElementById('ratingInput');
+        const ratingLabel = document.getElementById('ratingValueLabel');
+        const stars = document.querySelectorAll('.rating-star-btn');
+        if (!ratingInput || stars.length === 0) {
+            return;
+        }
+
+        function paintStars(value) {
+            stars.forEach((star) => {
+                const starValue = Number(star.dataset.value);
+                star.classList.toggle('is-active', starValue <= value);
+            });
+            if (ratingLabel) {
+                ratingLabel.textContent = value + '/5';
+            }
+        }
+
+        stars.forEach((star) => {
+            star.addEventListener('click', function () {
+                const value = Number(this.dataset.value);
+                ratingInput.value = value;
+                paintStars(value);
+            });
+        });
+
+        paintStars(Number(ratingInput.value || 5));
+    })();
+
+    (function () {
+        const directionsBtn = document.getElementById('directionsBtn');
+        if (!directionsBtn) {
+            return;
+        }
+
+        const fallbackUrl = directionsBtn.href;
+        const destination = directionsBtn.dataset.destination || '';
+
+        directionsBtn.addEventListener('click', function (event) {
+            if (!navigator.geolocation || !destination) {
+                return;
+            }
+
+            event.preventDefault();
+            navigator.geolocation.getCurrentPosition(
+                function (position) {
+                    const origin = position.coords.latitude + ',' + position.coords.longitude;
+                    const url =
+                        'https://www.google.com/maps/dir/?api=1&origin=' +
+                        encodeURIComponent(origin) +
+                        '&destination=' +
+                        encodeURIComponent(destination);
+                    window.open(url, '_blank');
+                },
+                function () {
+                    window.open(fallbackUrl, '_blank');
+                },
+                { timeout: 6000 }
+            );
+        });
+    })();
+</script>
 {% endblock %}
