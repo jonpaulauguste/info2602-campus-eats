@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Campus Eats - Restaurants{% endblock %}
+
+{% block content %}
+<div class="section-header">
+    <h2>All Restaurants</h2>
+    <a href="/">Back home</a>
+</div>
+
+<div class="restaurant-grid">
+    {% for place in places %}
+    <a href="/places/{{ place.id }}" class="restaurant-card">
+        <img
+            class="card-image"
+            src="{{ place.image_url }}"
+            alt="{{ place.name }}"
+            onerror="this.src='/static/img/placeholder.svg'"
+        />
+        <div class="card-body">
+            <h3>{{ place.name }}</h3>
+            <div class="card-meta">
+                <div class="rating">
+                    <span class="star">★</span>
+                    <span>{{ place.rating }}</span>
+                </div>
+                <span>•</span>
+                <span>{{ place.cuisine }}</span>
+            </div>
+            <div class="card-meta">
+                <span>{{ place.location }}</span>
+            </div>
+        </div>
+    </a>
+    {% else %}
+    <p>No restaurants available yet.</p>
+    {% endfor %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.getElementById('searchInput').addEventListener('input', function() {
+        const query = this.value.toLowerCase();
+        const cards = document.querySelectorAll('.restaurant-card');
+        cards.forEach(card => {
+            const name = card.querySelector('h3').textContent.toLowerCase();
+            const meta = card.querySelector('.card-meta').textContent.toLowerCase();
+            card.style.display = (name.includes(query) || meta.includes(query)) ? '' : 'none';
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Campus Eats - {{ place.name }}{% endblock %}
+
+{% block content %}
+<div class="section-header">
+    <h2>{{ place.name }}</h2>
+    <a href="/places">← Back to all restaurants</a>
+</div>
+
+<div class="restaurant-card" style="margin-bottom: 24px;">
+    <img
+        class="card-image"
+        src="{{ place.image_url }}"
+        alt="{{ place.name }}"
+        onerror="this.src='/static/img/placeholder.svg'"
+    />
+    <div class="card-body">
+        <div class="card-meta">
+            <div class="rating">
+                <span class="star">★</span>
+                <span>{{ place.rating }}</span>
+            </div>
+            <span>•</span>
+            <span>{{ place.cuisine }}</span>
+        </div>
+        <p>Location: {{ place.location }}</p>
+    </div>
+</div>
+
+<div class="section-header">
+    <h2>Menu Items</h2>
+</div>
+<div class="restaurant-card" style="padding: 14px; margin-bottom: 24px;">
+    {% for item in menu_items %}
+    <div class="card-meta" style="justify-content: space-between; margin-bottom: 10px;">
+        <span>{{ item.name }}</span>
+        <strong>${{ "%.2f"|format(item.price) }}</strong>
+    </div>
+    {% else %}
+    <p>No menu items available yet.</p>
+    {% endfor %}
+</div>
+
+<div class="section-header">
+    <h2>Reviews</h2>
+</div>
+<div class="restaurant-card" style="padding: 14px;">
+    {% for review in reviews %}
+    <div style="margin-bottom: 14px;">
+        <div class="card-meta">
+            <strong>{{ review.user_name }}</strong>
+            <span>•</span>
+            <span class="rating"><span class="star">★</span>{{ review.rating }}/5</span>
+        </div>
+        <p>{{ review.comment }}</p>
+    </div>
+    {% else %}
+    <p>No reviews yet.</p>
+    {% endfor %}
+</div>
+{% endblock %}

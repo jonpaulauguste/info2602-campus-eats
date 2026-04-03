@@ -33,6 +33,26 @@
 
     <!-- Page Content -->
     <main class="main-content">
+        {% if flash %}
+        <div
+            style="
+                margin-bottom: 16px;
+                padding: 12px 14px;
+                border-radius: 8px;
+                {% if flash.category == 'success' %}
+                background-color: #e8f5e9;
+                border: 1px solid #c8e6c9;
+                color: #1b5e20;
+                {% else %}
+                background-color: #ffebee;
+                border: 1px solid #ffcdd2;
+                color: #b71c1c;
+                {% endif %}
+            "
+        >
+            {{ flash.message }}
+        </div>
+        {% endif %}
         {% block content %}{% endblock %}
     </main>
 

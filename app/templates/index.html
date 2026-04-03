@@ -1,39 +1,16 @@
 {% extends "base.html" %}
 
-{% block title %}Campus Eats - Food on Campus{% endblock %}
+{% block title %}Campus Eats - Home{% endblock %}
 
 {% block content %}
-
-<!-- Promo Banner -->
 <div class="promo-banner">
     <div>
-        <h2>Welcome to Campus Eats!</h2>
-        <p>Discover the best food spots on campus. Browse menus, read reviews, and find your next meal.</p>
+        <h2>Welcome to Campus Eats</h2>
+        <p>Browse campus restaurants and check ratings from students.</p>
     </div>
-    <div class="promo-emoji">🎓</div>
+    <div class="promo-emoji">🍽️</div>
 </div>
 
-<!-- Category Icons Row -->
-<div class="categories-section">
-    <div class="categories-row">
-        {% for cat in categories %}
-        <a href="/places?category={{ cat.name }}" class="category-item">
-            <div class="category-icon">{{ cat.icon }}</div>
-            <span class="category-label">{{ cat.name }}</span>
-        </a>
-        {% endfor %}
-    </div>
-</div>
-
-<!-- Filter Pills -->
-<div class="filter-pills">
-    <span class="pill active">All</span>
-    <span class="pill">Open Now</span>
-    <span class="pill">Top Rated</span>
-    <span class="pill">Budget Friendly</span>
-</div>
-
-<!-- Featured Restaurants -->
 <div class="section-header">
     <h2>Popular on Campus</h2>
     <a href="/places">See all →</a>
@@ -42,9 +19,9 @@
 <div class="restaurant-grid">
     {% for place in places %}
     <a href="/places/{{ place.id }}" class="restaurant-card">
-        <img 
-            class="card-image" 
-            src="{{ place.image_url }}" 
+        <img
+            class="card-image"
+            src="{{ place.image_url }}"
             alt="{{ place.name }}"
             onerror="this.src='/static/img/placeholder.svg'"
         />
@@ -61,21 +38,16 @@
             <div class="card-meta">
                 <span>{{ place.location }}</span>
             </div>
-            <div class="card-tags">
-                {% for tag in place.tags %}
-                <span class="tag">{{ tag }}</span>
-                {% endfor %}
-            </div>
         </div>
     </a>
+    {% else %}
+    <p>No restaurants available yet.</p>
     {% endfor %}
 </div>
-
 {% endblock %}
 
 {% block scripts %}
 <script>
-    // Simple client-side search filter
     document.getElementById('searchInput').addEventListener('input', function() {
         const query = this.value.toLowerCase();
         const cards = document.querySelectorAll('.restaurant-card');
@@ -83,14 +55,6 @@
             const name = card.querySelector('h3').textContent.toLowerCase();
             const meta = card.querySelector('.card-meta').textContent.toLowerCase();
             card.style.display = (name.includes(query) || meta.includes(query)) ? '' : 'none';
-        });
-    });
-
-    // Filter pill toggle
-    document.querySelectorAll('.pill').forEach(pill => {
-        pill.addEventListener('click', function() {
-            document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
-            this.classList.add('active');
         });
     });
 </script>

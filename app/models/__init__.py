@@ -5,8 +5,9 @@ from sqlmodel import Field, Relationship, SQLModel
 
 class User(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    name: str
+    username: str = Field(unique=True, index=True)
     email: str = Field(unique=True, index=True)
+    password: str
 
     reviews: list["Review"] = Relationship(back_populates="user")
 
@@ -15,8 +16,8 @@ class Place(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
     cuisine: str
+    location: str
     rating: float = 0.0
-    description: str = ""
     image_url: str = "/static/img/placeholder.svg"
 
     menu_items: list["MenuItem"] = Relationship(back_populates="place")

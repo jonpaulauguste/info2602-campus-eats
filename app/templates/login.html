@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Campus Eats - Login{% endblock %}
+
+{% block content %}
+<div class="section-header">
+    <h2>Log In</h2>
+    <a href="/signup">Need an account? Sign up</a>
+</div>
+
+<div class="restaurant-card" style="max-width: 480px; padding: 18px; margin: 0 auto;">
+    <form method="post" action="/login" style="display: grid; gap: 12px;">
+        <label>
+            Username
+            <input type="text" name="username" required style="width: 100%; padding: 10px; margin-top: 4px;" />
+        </label>
+
+        <label>
+            Password
+            <input type="password" name="password" required style="width: 100%; padding: 10px; margin-top: 4px;" />
+        </label>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%;">Log In</button>
+    </form>
+</div>
+{% endblock %}
