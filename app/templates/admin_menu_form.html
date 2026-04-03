@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}Campus Eats - {{ title }}{% endblock %}
+
+{% block content %}
+<div class="section-header">
+    <h2>{{ title }}</h2>
+    <a href="/admin/places">Back to management</a>
+</div>
+
+<div class="restaurant-card" style="max-width: 640px; padding: 16px;">
+    <p style="margin-bottom: 12px;"><strong>Place:</strong> {{ place.name }}</p>
+
+    <form method="post" action="{{ action_url }}" style="display: grid; gap: 10px;">
+        <label>
+            Item Name
+            <input name="name" type="text" value="{{ menu_item.name if menu_item else '' }}" required style="width: 100%; padding: 10px; margin-top: 4px;" />
+        </label>
+
+        <label>
+            Price
+            <input name="price" type="number" step="0.01" value="{{ menu_item.price if menu_item else '' }}" required style="width: 100%; padding: 10px; margin-top: 4px;" />
+        </label>
+
+        <button class="btn btn-primary" type="submit" style="width: fit-content;">{{ submit_label }}</button>
+    </form>
+</div>
+{% endblock %}

@@ -5,6 +5,15 @@ from app.models import MenuItem, Place, Review, User
 
 engine = create_engine("sqlite:///database.db", echo=True)
 
+PLACE_IMAGE_OVERRIDES = {
+    "The Campus Grill": "/static/img/campus-grill.jpg",
+    "Cafe Mocha": "/static/img/cafe-mocha.jpg",
+    "Roti Hut": "/static/img/roti-hut.jpg",
+    "Pizza Planet": "/static/img/pizza-planet.jpg",
+    "Dragon Wok": "/static/img/dragon-wok.jpg",
+    "Doubles Express": "/static/img/doubles-express.jpg",
+}
+
 
 def _migrate_user_table_if_needed():
     with engine.begin() as connection:
@@ -112,42 +121,42 @@ def _seed_places_and_menu(session: Session):
             cuisine="American",
             location="Student Centre",
             rating=4.5,
-            image_url="/static/img/placeholder.svg",
+            image_url="/static/img/campus-grill.jpg",
         ),
         Place(
             name="Roti Hut",
             cuisine="Caribbean",
             location="South Gate",
             rating=4.7,
-            image_url="/static/img/placeholder.svg",
+            image_url="/static/img/roti-hut.jpg",
         ),
         Place(
             name="Cafe Mocha",
             cuisine="Coffee and Pastries",
             location="Library Building",
             rating=4.3,
-            image_url="/static/img/placeholder.svg",
+            image_url="/static/img/cafe-mocha.jpg",
         ),
         Place(
             name="Dragon Wok",
             cuisine="Chinese",
             location="Engineering Block",
             rating=4.1,
-            image_url="/static/img/placeholder.svg",
+            image_url="/static/img/dragon-wok.jpg",
         ),
         Place(
             name="Pizza Planet",
             cuisine="Italian",
             location="North Plaza",
             rating=4.6,
-            image_url="/static/img/placeholder.svg",
+            image_url="/static/img/pizza-planet.jpg",
         ),
         Place(
             name="Doubles Express",
             cuisine="Street Food",
             location="Main Entrance",
             rating=4.8,
-            image_url="/static/img/placeholder.svg",
+            image_url="/static/img/doubles-express.jpg",
         ),
     ]
     session.add_all(places)
@@ -174,6 +183,15 @@ def _seed_places_and_menu(session: Session):
         MenuItem(name="Mauby", price=6.0, place_id=places[5].id),
     ]
     session.add_all(menu_items)
+
+
+def _sync_place_images(session: Session):
+    for place_name, image_url in PLACE_IMAGE_OVERRIDES.items():
+        place = session.exec(select(Place).where(Place.name == place_name)).first()
+        if place is None:
+            continue
+        place.image_url = image_url
+        session.add(place)
 
 
 def _seed_reviews(session: Session, bob: User, student: User):
@@ -237,6 +255,7 @@ def create_db_and_tables():
         )
 
         _seed_places_and_menu(session)
+        _sync_place_images(session)
         _seed_reviews(session, bob=bob, student=student)
         session.commit()
 

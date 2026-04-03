@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Campus Eats - {{ title }}{% endblock %}
+
+{% block content %}
+<div class="section-header">
+    <h2>{{ title }}</h2>
+    <a href="/admin/places">Back to management</a>
+</div>
+
+<div class="restaurant-card" style="max-width: 640px; padding: 16px;">
+    <form method="post" action="{{ action_url }}" style="display: grid; gap: 10px;">
+        <label>
+            Place Name
+            <input name="name" type="text" value="{{ place.name if place else '' }}" required style="width: 100%; padding: 10px; margin-top: 4px;" />
+        </label>
+
+        <label>
+            Cuisine
+            <input name="cuisine" type="text" value="{{ place.cuisine if place else '' }}" required style="width: 100%; padding: 10px; margin-top: 4px;" />
+        </label>
+
+        <label>
+            Location
+            <input name="location" type="text" value="{{ place.location if place else '' }}" required style="width: 100%; padding: 10px; margin-top: 4px;" />
+        </label>
+
+        <label>
+            Image URL
+            <input name="image_url" type="text" value="{{ place.image_url if place else '/static/img/placeholder.svg' }}" style="width: 100%; padding: 10px; margin-top: 4px;" />
+        </label>
+
+        <button class="btn btn-primary" type="submit" style="width: fit-content;">{{ submit_label }}</button>
+    </form>
+</div>
+{% endblock %}

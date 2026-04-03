@@ -282,7 +282,31 @@ def admin_places_page(request: Request, session: Session = Depends(get_session))
     )
 
 
-@app.post("/admin/places")
+@app.get("/admin/places/new", response_class=HTMLResponse)
+def admin_new_place_page(request: Request, session: Session = Depends(get_session)):
+    user = current_user(request, session)
+    if user is None:
+        set_flash(request, "error", "Please log in.")
+        return RedirectResponse(url="/login", status_code=303)
+    if not is_management(user):
+        set_flash(request, "error", "Management access required.")
+        return RedirectResponse(url="/", status_code=303)
+
+    return templates.TemplateResponse(
+        request=request,
+        name="admin_place_form.html",
+        context={
+            "title": "Add New Place",
+            "action_url": "/admin/places/new",
+            "submit_label": "Create Place",
+            "place": None,
+            "user": user,
+            "flash": pop_flash(request),
+        },
+    )
+
+
+@app.post("/admin/places/new")
 def admin_create_place(
     request: Request,
     name: str = Form(...),
@@ -311,6 +335,38 @@ def admin_create_place(
 
     set_flash(request, "success", "Place created.")
     return RedirectResponse(url="/admin/places", status_code=303)
+
+
+@app.get("/admin/places/{place_id}/edit", response_class=HTMLResponse)
+def admin_edit_place_page(
+    request: Request,
+    place_id: int,
+    session: Session = Depends(get_session),
+):
+    user = current_user(request, session)
+    if user is None:
+        set_flash(request, "error", "Please log in.")
+        return RedirectResponse(url="/login", status_code=303)
+    if not is_management(user):
+        set_flash(request, "error", "Management access required.")
+        return RedirectResponse(url="/", status_code=303)
+
+    place = session.exec(select(Place).where(Place.id == place_id)).first()
+    if place is None:
+        raise HTTPException(status_code=404, detail="Place not found")
+
+    return templates.TemplateResponse(
+        request=request,
+        name="admin_place_form.html",
+        context={
+            "title": f"Edit Place: {place.name}",
+            "action_url": f"/admin/places/{place_id}/edit",
+            "submit_label": "Save Place",
+            "place": place,
+            "user": user,
+            "flash": pop_flash(request),
+        },
+    )
 
 
 @app.post("/admin/places/{place_id}/edit")
@@ -377,7 +433,40 @@ def admin_delete_place(
     return RedirectResponse(url="/admin/places", status_code=303)
 
 
-@app.post("/admin/places/{place_id}/menu-items")
+@app.get("/admin/places/{place_id}/menu/new", response_class=HTMLResponse)
+def admin_new_menu_item_page(
+    request: Request,
+    place_id: int,
+    session: Session = Depends(get_session),
+):
+    user = current_user(request, session)
+    if user is None:
+        set_flash(request, "error", "Please log in.")
+        return RedirectResponse(url="/login", status_code=303)
+    if not is_management(user):
+        set_flash(request, "error", "Management access required.")
+        return RedirectResponse(url="/", status_code=303)
+
+    place = session.exec(select(Place).where(Place.id == place_id)).first()
+    if place is None:
+        raise HTTPException(status_code=404, detail="Place not found")
+
+    return templates.TemplateResponse(
+        request=request,
+        name="admin_menu_form.html",
+        context={
+            "title": f"Add Menu Item: {place.name}",
+            "action_url": f"/admin/places/{place_id}/menu/new",
+            "submit_label": "Create Menu Item",
+            "menu_item": None,
+            "place": place,
+            "user": user,
+            "flash": pop_flash(request),
+        },
+    )
+
+
+@app.post("/admin/places/{place_id}/menu/new")
 def admin_add_menu_item(
     request: Request,
     place_id: int,
@@ -405,7 +494,44 @@ def admin_add_menu_item(
     return RedirectResponse(url="/admin/places", status_code=303)
 
 
-@app.post("/admin/menu-items/{menu_item_id}/edit")
+@app.get("/admin/menu/{menu_item_id}/edit", response_class=HTMLResponse)
+def admin_edit_menu_item_page(
+    request: Request,
+    menu_item_id: int,
+    session: Session = Depends(get_session),
+):
+    user = current_user(request, session)
+    if user is None:
+        set_flash(request, "error", "Please log in.")
+        return RedirectResponse(url="/login", status_code=303)
+    if not is_management(user):
+        set_flash(request, "error", "Management access required.")
+        return RedirectResponse(url="/", status_code=303)
+
+    menu_item = session.exec(select(MenuItem).where(MenuItem.id == menu_item_id)).first()
+    if menu_item is None:
+        raise HTTPException(status_code=404, detail="Menu item not found")
+
+    place = session.exec(select(Place).where(Place.id == menu_item.place_id)).first()
+    if place is None:
+        raise HTTPException(status_code=404, detail="Place not found")
+
+    return templates.TemplateResponse(
+        request=request,
+        name="admin_menu_form.html",
+        context={
+            "title": f"Edit Menu Item: {menu_item.name}",
+            "action_url": f"/admin/menu/{menu_item_id}/edit",
+            "submit_label": "Save Menu Item",
+            "menu_item": menu_item,
+            "place": place,
+            "user": user,
+            "flash": pop_flash(request),
+        },
+    )
+
+
+@app.post("/admin/menu/{menu_item_id}/edit")
 def admin_edit_menu_item(
     request: Request,
     menu_item_id: int,
@@ -434,7 +560,7 @@ def admin_edit_menu_item(
     return RedirectResponse(url="/admin/places", status_code=303)
 
 
-@app.post("/admin/menu-items/{menu_item_id}/delete")
+@app.post("/admin/menu/{menu_item_id}/delete")
 def admin_delete_menu_item(
     request: Request,
     menu_item_id: int,

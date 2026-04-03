@@ -8,55 +8,48 @@
     <a href="/places">View public listings</a>
 </div>
 
-<div class="restaurant-card" style="padding: 16px; margin-bottom: 24px;">
-    <h3 style="margin-bottom: 12px;">Add New Place</h3>
-    <form method="post" action="/admin/places" style="display: grid; gap: 10px;">
-        <input name="name" type="text" placeholder="Place name" required style="padding: 10px;" />
-        <input name="cuisine" type="text" placeholder="Cuisine" required style="padding: 10px;" />
-        <input name="location" type="text" placeholder="Location" required style="padding: 10px;" />
-        <input name="image_url" type="text" placeholder="Image URL (optional)" style="padding: 10px;" />
-        <button class="btn btn-primary" type="submit" style="width: fit-content;">Create Place</button>
-    </form>
+<div style="margin-bottom: 16px;">
+    <a class="btn btn-primary" href="/admin/places/new">Add New Place</a>
 </div>
 
 {% for place in places %}
 <div class="restaurant-card" style="padding: 16px; margin-bottom: 24px;">
-    <h3 style="margin-bottom: 12px;">Edit Place: {{ place.name }}</h3>
-
-    <form method="post" action="/admin/places/{{ place.id }}/edit" style="display: grid; gap: 10px; margin-bottom: 10px;">
-        <input name="name" type="text" value="{{ place.name }}" required style="padding: 10px;" />
-        <input name="cuisine" type="text" value="{{ place.cuisine }}" required style="padding: 10px;" />
-        <input name="location" type="text" value="{{ place.location }}" required style="padding: 10px;" />
-        <input name="image_url" type="text" value="{{ place.image_url }}" style="padding: 10px;" />
+    <div class="section-header" style="margin-bottom: 10px;">
+        <h3>{{ place.name }}</h3>
         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-            <button class="btn btn-primary" type="submit">Save Place</button>
+            <a class="btn btn-outline" href="/admin/places/{{ place.id }}/edit">Edit Place</a>
+            <form method="post" action="/admin/places/{{ place.id }}/delete" onsubmit="return confirm('Delete this place?');">
+                <button class="btn btn-outline" type="submit">Delete Place</button>
+            </form>
         </div>
-    </form>
+    </div>
 
-    <form method="post" action="/admin/places/{{ place.id }}/delete" onsubmit="return confirm('Delete this place?');" style="margin-bottom: 16px;">
-        <button class="btn btn-outline" type="submit">Delete Place</button>
-    </form>
+    <p style="margin-bottom: 8px;"><strong>Cuisine:</strong> {{ place.cuisine }}</p>
+    <p style="margin-bottom: 12px;"><strong>Location:</strong> {{ place.location }}</p>
 
-    <h4 style="margin-bottom: 8px;">Menu Items</h4>
+    <div class="section-header" style="margin-bottom: 8px;">
+        <h4>Menu Items</h4>
+        <a class="btn btn-primary" href="/admin/places/{{ place.id }}/menu/new">Add Menu Item</a>
+    </div>
 
     {% for item in menu_items_by_place[place.id] %}
-    <form method="post" action="/admin/menu-items/{{ item.id }}/edit" style="display: grid; gap: 8px; margin-bottom: 8px; padding: 10px; border: 1px solid #eee; border-radius: 8px;">
-        <input name="name" type="text" value="{{ item.name }}" required style="padding: 10px;" />
-        <input name="price" type="number" step="0.01" value="{{ item.price }}" required style="padding: 10px;" />
-        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-            <button class="btn btn-primary" type="submit">Save Item</button>
-            <button class="btn btn-outline" formaction="/admin/menu-items/{{ item.id }}/delete" formmethod="post" type="submit">Delete Item</button>
+    <div style="display: flex; justify-content: space-between; gap: 8px; align-items: center; border: 1px solid #eee; border-radius: 8px; padding: 10px; margin-bottom: 8px;">
+        <div>
+            <strong>{{ item.name }}</strong>
+            <div>${{ "%.2f"|format(item.price) }}</div>
         </div>
-    </form>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <a class="btn btn-outline" href="/admin/menu/{{ item.id }}/edit">Edit</a>
+            <form method="post" action="/admin/menu/{{ item.id }}/delete" onsubmit="return confirm('Delete this menu item?');">
+                <button class="btn btn-outline" type="submit">Delete</button>
+            </form>
+        </div>
+    </div>
     {% else %}
-    <p style="margin-bottom: 12px;">No menu items yet.</p>
+    <p>No menu items yet.</p>
     {% endfor %}
-
-    <form method="post" action="/admin/places/{{ place.id }}/menu-items" style="display: grid; gap: 10px; margin-top: 10px;">
-        <input name="name" type="text" placeholder="New menu item name" required style="padding: 10px;" />
-        <input name="price" type="number" step="0.01" placeholder="Price" required style="padding: 10px;" />
-        <button class="btn btn-primary" type="submit" style="width: fit-content;">Add Menu Item</button>
-    </form>
 </div>
+{% else %}
+<p>No places available yet.</p>
 {% endfor %}
 {% endblock %}

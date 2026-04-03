@@ -75,6 +75,9 @@ a {
 
 /* ===== BUTTONS ===== */
 .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     padding: 8px 18px;
     border-radius: 20px;
     font-size: 0.9rem;
@@ -89,6 +92,12 @@ a {
     color: #fff;
 }
 
+.btn-primary:visited,
+a.btn-primary,
+a.btn-primary:visited {
+    color: #fff;
+}
+
 .btn-primary:hover {
     background-color: #b71c1c;
 }
@@ -97,6 +106,12 @@ a {
     background-color: #fff;
     color: #333;
     border: 1px solid #ddd;
+}
+
+.btn-outline:visited,
+a.btn-outline,
+a.btn-outline:visited {
+    color: #333;
 }
 
 .btn-outline:hover {
@@ -204,7 +219,7 @@ a {
     font-weight: 700;
 }
 
-.section-header a {
+.section-header a:not(.btn) {
     color: #d32f2f;
     font-weight: 600;
     font-size: 0.9rem;
