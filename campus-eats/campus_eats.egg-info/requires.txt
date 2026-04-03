@@ -1,9 +1,0 @@
-fastapi
-uvicorn
-sqlmodel
-jinja2
-python-multipart
-pydantic-settings
-email-validator
-pyjwt
-pwdlib[argon2]
